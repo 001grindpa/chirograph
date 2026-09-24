@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10100d" />
+    <title>Chirograph</title>
+    <meta name="description" content="Chirograph — dated milestone grant escrow on GenLayer StudioNet." />
+    <link rel="icon" type="image/png" href="/static/chirograph-logo.png" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div id="landing-view" class="view-container view-active">
+      <header class="folio-header">
+        <a class="brand" href="#landing-view" aria-label="Chirograph home">
+          <img src="/static/chirograph-logo.png" alt="Chirograph" />
+          <span>Chirograph</span>
+        </a>
+
+        <nav class="folio-nav" aria-label="Primary navigation">
+          <a href="#life">Life</a>
+          <a href="#sources">Sources</a>
+          <a href="#notes">Docket notes</a>
+        </nav>
+
+        <div class="header-tools">
+          <button class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme"><span class="theme-mark">☼</span></button>
+          <button class="stamp-button enter-app-trigger" type="button">Open desk</button>
+        </div>
+      </header>
+
+      <main class="folio-sheet">
+        <section class="landing-hero">
+          <div class="hero-copy">
+            <p class="folio-kicker">StudioNet grant desk</p>
+            <h1>Lock a grant. Release each dated rung.</h1>
+            <p>
+              Chirograph keeps a funder’s GEN in sequence. A named builder posts two public pages for a milestone date,
+              and the contract only pays when the pages line up with the grant and the builder address.
+            </p>
+            <button class="primary-action enter-app-trigger" type="button">Open the desk</button>
+          </div>
+
+          <aside class="folio-ledger" aria-label="Grant ledger summary">
+            <div class="ledger-header">
+              <span class="ledger-tag">Ledger no.</span>
+              <strong>01</strong>
+            </div>
+            <dl>
+              <div>
+                <dt>Builder</dt>
+                <dd>0x9b1d…fd8d</dd>
+              </div>
+              <div>
+                <dt>Milestone</dt>
+                <dd>2026-10-15</dd>
+              </div>
+              <div>
+                <dt>Escrow</dt>
+                <dd>12.00 GEN</dd>
+              </div>
+              <div>
+                <dt>State</dt>
+                <dd>RESERVED</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+
+        <section id="life" class="folio-section">
+          <div class="section-heading">
+            <p class="folio-kicker">Grant life</p>
+            <h2>The docket in sequence</h2>
+          </div>
+
+          <ol class="timeline-list">
+            <li>
+              <span class="index">01</span>
+              <div>
+                <h3>Create</h3>
+                <p>Funder names the builder and locks the grant terms with two public specification pages.</p>
+              </div>
+            </li>
+            <li>
+              <span class="index">02</span>
+              <div>
+                <h3>Fund</h3>
+                <p>Reserve the next tranche in order, with a milestone date and GEN value attached.</p>
+              </div>
+            </li>
+            <li>
+              <span class="index">03</span>
+              <div>
+                <h3>Evidence</h3>
+                <p>Builder attaches two public evidence pages from different hosts, one for each milestone.</p>
+              </div>
+            </li>
+            <li>
+              <span class="index">04</span>
+              <div>
+                <h3>Review</h3>
+                <p>Anyone opens the tranche for adjudication once both evidence URLs are live.</p>
+              </div>
+            </li>
+            <li>
+              <span class="index">05</span>
+              <div>
+                <h3>Release</h3>
+                <p>YES pays the builder; NO closes and refunds; unknown or disagree reopens the rung.</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section id="sources" class="folio-section narrow">
+          <div class="section-heading">
+            <p class="folio-kicker">Accepted sources</p>
+            <h2>Trusted public hosts</h2>
+          </div>
+          <div class="sources-strip" aria-label="Allowed source hosts">
+            <span>GitHub</span>
+            <span>GitLab</span>
+            <span>Bitbucket</span>
+            <span>Codeberg</span>
+            <span>sr.ht</span>
+            <span>Read the Docs</span>
+            <span>GitBook</span>
+          </div>
+        </section>
+
+        <section id="notes" class="folio-section">
+          <div class="section-heading">
+            <p class="folio-kicker">Docket notes</p>
+            <h2>Common questions</h2>
+          </div>
+
+          <div class="faq-grid">
+            <article>
+              <h3>Why two sources?</h3>
+              <p>Each milestone needs independent corroboration from different hosts before a release can clear.</p>
+            </article>
+            <article>
+              <h3>Who can review?</h3>
+              <p>Any party can open review when the grant is active and both evidence URLs are present.</p>
+            </article>
+            <article>
+              <h3>What happens on timeout?</h3>
+              <p>After the review window expires, the tranche reopens as reserved, and the funder may also claw back.</p>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="app-view" class="view-container view-hidden">
+      <header class="desk-header">
+        <div class="brand-wrap">
+          <button id="back-landing" class="text-button" type="button">Return to landing</button>
+          <a class="brand" href="#landing-view" aria-label="Chirograph home">
+            <img src="/static/chirograph-logo.png" alt="Chirograph" />
+            <span>Chirograph</span>
+          </a>
+        </div>
+
+        <div class="header-tools">
+          <button class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme"><span class="theme-mark">☼</span></button>
+          <div id="wallet-chip" class="wallet-chip hidden">
+            <span id="wallet-address">0x0000…0000</span>
+            <button id="disconnect-btn" class="text-button small-text" type="button">Disconnect</button>
+          </div>
+          <button id="connect-btn" class="wax-button" type="button">Connect</button>
+        </div>
+      </header>
+
+      <main class="desk-shell">
+        <aside class="spine-panel">
+          <div class="spine-box">
+            <p class="folio-kicker">Contract</p>
+            <a id="contract-link" class="contract-link" href="https://explorer-studio.genlayer.com/address/0x0457a41D55729cf56a92E1048b1eB8F1D2471f4F" target="_blank" rel="noreferrer">0x0457…1f4F</a>
+          </div>
+
+          <div class="spine-box muted-box">
+            <p class="folio-kicker">Chirograph</p>
+            <ul class="micro-list">
+              <li>Chain: 61999</li>
+              <li>Currency: GEN</li>
+              <li>Escrow: sequential</li>
+            </ul>
+          </div>
+
+          <div class="spine-stats">
+            <div>
+              <span>Grants</span>
+              <strong id="stat-count">—</strong>
+            </div>
+            <div>
+              <span>Reserved</span>
+              <strong id="stat-reserved">—</strong>
+            </div>
+          </div>
+        </aside>
+
+        <section class="folio-workbench">
+          <nav class="rung-list" aria-label="Grant actions">
+            <button class="rung is-active" type="button" data-page="create">Create grant</button>
+            <button class="rung" type="button" data-page="fund">Fund tranche</button>
+            <button class="rung" type="button" data-page="evidence">Update evidence</button>
+            <button class="rung" type="button" data-page="review">Open review</button>
+            <button class="rung" type="button" data-page="release">Release</button>
+            <button class="rung" type="button" data-page="expire">Expire review</button>
+            <button class="rung" type="button" data-page="clawback">Clawback</button>
+            <button class="rung" type="button" data-page="lookup">Lookup</button>
+          </nav>
+
+          <div class="page-shell">
+            <form id="create-grant-form" class="page-form" data-page="create">
+              <div class="page-header">
+                <p class="folio-kicker">Create</p>
+                <h2>Open a new grant</h2>
+              </div>
+
+              <div class="field">
+                <label for="builder">Builder address</label>
+                <input id="builder" type="text" class="mono" placeholder="0x..." required />
+              </div>
+
+              <div class="field">
+                <label for="title">Grant title</label>
+                <input id="title" type="text" placeholder="Title" required />
+              </div>
+
+              <div class="field">
+                <label for="spec-text">Spec text</label>
+                <textarea id="spec-text" rows="4" placeholder="Describe the milestone and completion standard." required></textarea>
+              </div>
+
+              <div class="field">
+                <label for="spec-a">Spec URL A</label>
+                <input id="spec-a" type="url" class="mono" placeholder="https://github.com/..." required />
+              </div>
+
+              <div class="field">
+                <label for="spec-b">Spec URL B</label>
+                <input id="spec-b" type="url" class="mono" placeholder="https://gitlab.com/..." required />
+              </div>
+
+              <button class="primary-action full-width" type="submit">Create grant</button>
+            </form>
+
+            <form id="fund-form" class="page-form hidden" data-page="fund">
+              <div class="page-header">
+                <p class="folio-kicker">Fund</p>
+                <h2>Reserve the next tranche</h2>
+              </div>
+
+              <div class="field">
+                <label for="fund-grant-id">Grant id</label>
+                <input id="fund-grant-id" type="text" class="mono" placeholder="1" required />
+              </div>
+
+              <div class="field">
+                <label for="milestone-text">Milestone text</label>
+                <input id="milestone-text" type="text" placeholder="Milestone note" required />
+              </div>
+
+              <div class="field">
+                <label for="milestone-date">Milestone date</label>
+                <input id="milestone-date" type="date" class="mono" required />
+              </div>
+
+              <div class="field">
+                <label for="fund-evidence-a">Evidence URL A</label>
+                <input id="fund-evidence-a" type="url" class="mono" placeholder="https://github.com/..." />
+              </div>
+
+              <div class="field">
+                <label for="fund-evidence-b">Evidence URL B</label>
+                <input id="fund-evidence-b" type="url" class="mono" placeholder="https://gitlab.com/..." />
+              </div>
+
+              <div class="field">
+                <label for="fund-amount">Amount in GEN</label>
+                <input id="fund-amount" type="number" step="any" min="0" class="mono" placeholder="1.0" required />
+              </div>
+
+              <button class="primary-action full-width" type="submit">Fund tranche</button>
+            </form>
+
+            <form id="evidence-form" class="page-form hidden" data-page="evidence">
+              <div class="page-header">
+                <p class="folio-kicker">Evidence</p>
+                <h2>Update public pages</h2>
+              </div>
+
+              <div class="two-col">
+                <div class="field">
+                  <label for="evidence-grant-id">Grant id</label>
+                  <input id="evidence-grant-id" type="text" class="mono" placeholder="1" required />
+                </div>
+                <div class="field">
+                  <label for="evidence-tranche">Tranche</label>
+                  <input id="evidence-tranche" type="text" class="mono" placeholder="1" required />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="work-a">Work URL A</label>
+                <input id="work-a" type="url" class="mono" placeholder="https://github.com/..." required />
+              </div>
+
+              <div class="field">
+                <label for="work-b">Work URL B</label>
+                <input id="work-b" type="url" class="mono" placeholder="https://gitlab.com/..." required />
+              </div>
+
+              <button class="primary-action full-width" type="submit">Update evidence</button>
+            </form>
+
+            <form id="review-form" class="page-form hidden" data-page="review">
+              <div class="page-header">
+                <p class="folio-kicker">Review</p>
+                <h2>Open review</h2>
+              </div>
+
+              <div class="two-col">
+                <div class="field">
+                  <label for="review-grant-id">Grant id</label>
+                  <input id="review-grant-id" type="text" class="mono" placeholder="1" required />
+                </div>
+                <div class="field">
+                  <label for="review-tranche">Tranche</label>
+                  <input id="review-tranche" type="text" class="mono" placeholder="1" required />
+                </div>
+              </div>
+
+              <button class="primary-action full-width" type="submit">Open review</button>
+            </form>
+
+            <form id="release-form" class="page-form hidden" data-page="release">
+              <div class="page-header">
+                <p class="folio-kicker">Release</p>
+                <h2>Release the tranche</h2>
+              </div>
+
+              <div class="two-col">
+                <div class="field">
+                  <label for="release-grant-id">Grant id</label>
+                  <input id="release-grant-id" type="text" class="mono" placeholder="1" required />
+                </div>
+                <div class="field">
+                  <label for="release-tranche">Tranche</label>
+                  <input id="release-tranche" type="text" class="mono" placeholder="1" required />
+                </div>
+              </div>
+
+              <button class="primary-action full-width" type="submit">Release</button>
+            </form>
+
+            <form id="expire-form" class="page-form hidden" data-page="expire">
+              <div class="page-header">
+                <p class="folio-kicker">Expire</p>
+                <h2>Expire review</h2>
+              </div>
+
+              <div class="two-col">
+                <div class="field">
+                  <label for="expire-grant-id">Grant id</label>
+                  <input id="expire-grant-id" type="text" class="mono" placeholder="1" required />
+                </div>
+                <div class="field">
+                  <label for="expire-tranche">Tranche</label>
+                  <input id="expire-tranche" type="text" class="mono" placeholder="1" required />
+                </div>
+              </div>
+
+              <button class="primary-action full-width" type="submit">Expire review</button>
+            </form>
+
+            <form id="clawback-form" class="page-form hidden" data-page="clawback">
+              <div class="page-header">
+                <p class="folio-kicker">Clawback</p>
+                <h2>Refund the funder</h2>
+              </div>
+
+              <div class="two-col">
+                <div class="field">
+                  <label for="clawback-grant-id">Grant id</label>
+                  <input id="clawback-grant-id" type="text" class="mono" placeholder="1" required />
+                </div>
+                <div class="field">
+                  <label for="clawback-tranche">Tranche</label>
+                  <input id="clawback-tranche" type="text" class="mono" placeholder="1" required />
+                </div>
+              </div>
+
+              <button class="primary-action full-width" type="submit">Clawback</button>
+            </form>
+
+            <form id="lookup-form" class="page-form hidden" data-page="lookup">
+              <div class="page-header">
+                <p class="folio-kicker">Lookup</p>
+                <h2>Inspect grant state</h2>
+              </div>
+
+              <div class="two-col">
+                <div class="field">
+                  <label for="lookup-grant-id">Grant id</label>
+                  <input id="lookup-grant-id" type="text" class="mono" placeholder="1" required />
+                </div>
+                <div class="field">
+                  <label for="lookup-tranche">Tranche</label>
+                  <input id="lookup-tranche" type="text" class="mono" placeholder="optional" />
+                </div>
+              </div>
+
+              <button class="secondary-action full-width" type="submit">Inspect</button>
+              <pre id="lookup-out" class="lookup-output">No grant loaded.</pre>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer class="desk-footer">
+        <p id="status-msg">Connect a StudioNet wallet to create or fund a grant.</p>
+        <div id="tx-link" class="tx-box hidden">
+          <span>Latest transaction:</span>
+          <a id="tx-hash" href="#" target="_blank" rel="noreferrer"></a>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="/static/app.js"></script>
+  </body>
+</html>
