@@ -206,11 +206,28 @@ function shortenAddress(address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+const discoveredWallets = [];
+
+window.addEventListener("eip6963:announceProvider", (event) => {
+  const { info, provider } = event.detail || {};
+  if (!provider?.request || !info?.rdns) return;
+  if (discoveredWallets.some((w) => w.rdns === info.rdns)) return;
+  discoveredWallets.push({
+    rdns: info.rdns,
+    name: info.name || info.rdns,
+    provider,
+  });
+});
+
+window.dispatchEvent(new Event("eip6963:requestProvider"));
+
 function getPreferredProvider() {
-  const providers = Array.isArray(window.eip6963?.providers) ? window.eip6963.providers : [];
-  for (const candidate of providers) {
-    if (candidate?.provider?.request) return candidate.provider;
-  }
+  const okx = discoveredWallets.find((w) =>
+    ["com.okex.wallet", "com.okx.wallet"].includes(w.rdns)
+  );
+  if (okx) return okx.provider;
+  if (discoveredWallets[0]) return discoveredWallets[0].provider;
+  if (window.okxwallet?.request) return window.okxwallet;
   return window.ethereum || null;
 }
 
