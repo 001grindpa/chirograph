@@ -1,0 +1,9 @@
+{
+  "name": "chirograph",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-network-imports --test test/frontend/app.test.js",
+    "test:static": "node --experimental-network-imports --test static/tx.test.js"
+  }
+}
