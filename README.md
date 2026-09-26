@@ -24,7 +24,7 @@ The following live StudioNet transactions show grant creation, funding, evidence
 
 ### Accepted State Readouts (`stateStatus: "accepted"`)
 
-#### `get_grant` (live grant (id from lookup))
+#### `get_grant` (Grant ID: 4)
 ```json
 {
   "builder": "0xB69752fc9A3215D39967E8eA471D12FF6b1319C5",
