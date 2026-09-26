@@ -30,7 +30,7 @@ export const ABI = [
     name: "create_grant",
     stateMutability: "nonpayable",
     inputs: [
-      // Deployed signature is str -> Address(builder) on chain
+      // Deployed signature is builder: str then Address(builder).
       { name: "builder", type: "string" },
       { name: "title", type: "string" },
       { name: "spec_text", type: "string" },
@@ -144,10 +144,13 @@ export const state = {
   view: typeof localStorage !== "undefined" ? localStorage.getItem(VIEW_KEY) || "landing" : "landing",
   theme: typeof localStorage !== "undefined" ? localStorage.getItem(THEME_KEY) || "dark" : "dark",
   isSubmitting: false,
+  inFlight: false,
   currentStatus: "",
   latestTxHash: "",
   client: null,
 };
+
+let lastBoundClient = null;
 
 export function updateClient() {
   state.client = createClient({
@@ -156,6 +159,7 @@ export function updateClient() {
     account: state.walletAddress || "0x0000000000000000000000000000000000000000",
     provider: state.provider || undefined,
   });
+  lastBoundClient = state.client;
 }
 
 // Initial client creation
@@ -432,10 +436,10 @@ export function validateBuilderAddress(builder, connectedWallet) {
   if (builder === undefined || builder === null || typeof builder !== "string") {
     throw new Error("Builder address is required.");
   }
-  const raw = builder.trim();
-  if (!raw) {
+  if (!builder.trim()) {
     throw new Error("Builder address is required.");
   }
+  const raw = builder;
   if (!/^0x[0-9a-fA-F]{40}$/.test(raw)) {
     throw new Error("Invalid builder address format: must match /^0x[0-9a-fA-F]{40}$/.");
   }
@@ -469,10 +473,7 @@ export function parseAmountInWei(value) {
     throw new Error("Invalid amount format.");
   }
   const [wholeStr, fracStr = ""] = raw.split(".");
-  if (fracStr.length > 18) {
-    throw new Error("Amount exceeds maximum precision of 18 decimal places.");
-  }
-  const paddedFrac = fracStr.padEnd(18, "0");
+  const paddedFrac = fracStr.slice(0, 18).padEnd(18, "0");
   const wholeWei = BigInt(wholeStr) * 10n ** 18n;
   const fracWei = BigInt(paddedFrac);
   const totalWei = wholeWei + fracWei;
@@ -508,20 +509,29 @@ export async function readContract(functionName, args = []) {
   });
 }
 
-export async function executeWriteFlow(functionName, args = [], value, submitBtn, verifyReadbackFn) {
-  if (state.isSubmitting) {
+export async function executeWriteFlow(functionName, args = [], value, afterAccepted, legacyReadbackFn) {
+  let submitBtn = null;
+  if (typeof afterAccepted !== "function") {
+    submitBtn = afterAccepted;
+    afterAccepted = legacyReadbackFn;
+  }
+
+  if (state.inFlight || state.isSubmitting) {
     throw new Error("A transaction is already in flight. Please wait.");
   }
 
-  await ensureWalletReady();
-
+  state.inFlight = true;
   state.isSubmitting = true;
   if (submitBtn) submitBtn.disabled = true;
 
   let txHash = null;
 
   try {
-    // Phase 1: signature
+    await ensureWalletReady();
+    const injectedClient = state.client !== lastBoundClient ? state.client : null;
+    updateClient();
+    if (injectedClient) state.client = injectedClient;
+
     setStatus("Phase: signature — Please approve transaction in your wallet.");
 
     const payload = {
@@ -541,8 +551,7 @@ export async function executeWriteFlow(functionName, args = [], value, submitBtn
     setTxLink(txHash);
     setStatus(`Phase: submitted — Transaction submitted with hash ${shortenAddress(txHash)}`);
 
-    // Phase 3: finalized
-    setStatus("Phase: finalized — Waiting for transaction finalization...");
+    setStatus("Phase: wait finalized — Waiting for transaction finalization...");
     const receipt = await state.client.waitForTransactionReceipt({
       hash: txHash,
       status: "FINALIZED",
@@ -554,22 +563,28 @@ export async function executeWriteFlow(functionName, args = [], value, submitBtn
       throw new Error("Transaction was canceled or consensus failed.");
     }
 
-    // Phase 4: consensus
     setStatus("Phase: consensus — Transaction consensus achieved.");
 
-    // Phase 5: execution
     setStatus("Phase: execution — Transaction executed on chain.");
 
-    // Phase 6: accepted-readback
-    setStatus("Phase: accepted-readback — Verifying accepted state readout...");
-    if (verifyReadbackFn) {
-      await verifyReadbackFn(receipt);
+    setStatus("Phase: read — Verifying accepted state readout...");
+    if (afterAccepted) {
+      await afterAccepted(receipt);
     }
+    setStatus("Phase: accepted — State accepted on chain.");
     await refreshStats();
 
     setStatus("Transaction complete and state accepted on chain.");
     return txHash;
+  } catch (error) {
+    if (error?.code === 4001) {
+      const rejected = new Error("Signature rejected by wallet (User rejected the request).");
+      setStatus(rejected.message);
+      throw rejected;
+    }
+    throw error;
   } finally {
+    state.inFlight = false;
     state.isSubmitting = false;
     if (submitBtn) submitBtn.disabled = false;
   }
@@ -762,15 +777,14 @@ export function bindWalletControls() {
 export async function handleCreateGrant(event) {
   event.preventDefault();
   const form = event.target;
-  const submitBtn = form.querySelector("button[type='submit']");
 
   try {
     await ensureWalletReady();
 
-    const builderInput = document.getElementById("builder-address").value;
+    const builderInput = document.getElementById("builder").value;
     const checksummedBuilder = validateBuilderAddress(builderInput, state.walletAddress);
 
-    const title = document.getElementById("grant-title").value.trim();
+    const title = document.getElementById("title").value.trim();
     const specText = document.getElementById("spec-text").value.trim();
     const specA = document.getElementById("spec-a").value.trim();
     const specB = document.getElementById("spec-b").value.trim();
@@ -784,7 +798,6 @@ export async function handleCreateGrant(event) {
       "create_grant",
       [checksummedBuilder, title, specText, pair.urlA, pair.urlB],
       undefined,
-      submitBtn,
       async () => {
         const count = await readContract("get_grant_count");
         if (BigInt(count) <= 0n) {
@@ -808,7 +821,6 @@ export async function handleCreateGrant(event) {
 export async function handleFundTranche(event) {
   event.preventDefault();
   const form = event.target;
-  const submitBtn = form.querySelector("button[type='submit']");
 
   try {
     await ensureWalletReady();
@@ -837,7 +849,6 @@ export async function handleFundTranche(event) {
       "fund_tranche",
       [grantId, milestoneText, milestoneDate, pair.urlA, pair.urlB],
       weiAmount,
-      submitBtn,
       async () => {
         const grantRaw = await readContract("get_grant", [grantId]);
         const grantObj = JSON.parse(grantRaw);
@@ -863,7 +874,6 @@ export async function handleFundTranche(event) {
 export async function handleEvidenceUpdate(event) {
   event.preventDefault();
   const form = event.target;
-  const submitBtn = form.querySelector("button[type='submit']");
 
   try {
     await ensureWalletReady();
@@ -881,7 +891,6 @@ export async function handleEvidenceUpdate(event) {
       "update_evidence",
       [grantId, BigInt(trancheIndex), pair.urlA, pair.urlB],
       undefined,
-      submitBtn,
       async () => {
         const trancheRaw = await readContract("get_tranche", [grantId, BigInt(trancheIndex)]);
         const trancheObj = JSON.parse(trancheRaw);
@@ -901,7 +910,6 @@ export async function handleEvidenceUpdate(event) {
 export async function handleOpenReview(event) {
   event.preventDefault();
   const form = event.target;
-  const submitBtn = form.querySelector("button[type='submit']");
 
   try {
     await ensureWalletReady();
@@ -915,7 +923,6 @@ export async function handleOpenReview(event) {
       "open_review",
       [grantId, BigInt(trancheIndex)],
       undefined,
-      submitBtn,
       async () => {
         const trancheRaw = await readContract("get_tranche", [grantId, BigInt(trancheIndex)]);
         const trancheObj = JSON.parse(trancheRaw);
@@ -935,7 +942,6 @@ export async function handleOpenReview(event) {
 export async function handleRelease(event) {
   event.preventDefault();
   const form = event.target;
-  const submitBtn = form.querySelector("button[type='submit']");
 
   try {
     await ensureWalletReady();
@@ -949,7 +955,6 @@ export async function handleRelease(event) {
       "release",
       [grantId, BigInt(trancheIndex)],
       undefined,
-      submitBtn,
       async () => {
         const trancheRaw = await readContract("get_tranche", [grantId, BigInt(trancheIndex)]);
         const trancheObj = JSON.parse(trancheRaw);
@@ -969,7 +974,6 @@ export async function handleRelease(event) {
 export async function handleExpireReview(event) {
   event.preventDefault();
   const form = event.target;
-  const submitBtn = form.querySelector("button[type='submit']");
 
   try {
     await ensureWalletReady();
@@ -983,7 +987,6 @@ export async function handleExpireReview(event) {
       "expire_review",
       [grantId, BigInt(trancheIndex)],
       undefined,
-      submitBtn,
       async () => {
         const trancheRaw = await readContract("get_tranche", [grantId, BigInt(trancheIndex)]);
         const trancheObj = JSON.parse(trancheRaw);
@@ -1003,7 +1006,6 @@ export async function handleExpireReview(event) {
 export async function handleClawback(event) {
   event.preventDefault();
   const form = event.target;
-  const submitBtn = form.querySelector("button[type='submit']");
 
   try {
     await ensureWalletReady();
@@ -1017,7 +1019,6 @@ export async function handleClawback(event) {
       "clawback",
       [grantId, BigInt(trancheIndex)],
       undefined,
-      submitBtn,
       async () => {
         const trancheRaw = await readContract("get_tranche", [grantId, BigInt(trancheIndex)]);
         const trancheObj = JSON.parse(trancheRaw);
