@@ -153,11 +153,12 @@ export const state = {
 let lastBoundClient = null;
 
 export function updateClient() {
+  const account = state.walletAddress || undefined;
+  const provider = state.provider || undefined;
   state.client = createClient({
     chain: studionet,
-    endpoint: RPC_URL,
-    account: state.walletAddress || "0x0000000000000000000000000000000000000000",
-    provider: state.provider || undefined,
+    ...(account ? { account } : {}),
+    ...(provider ? { provider } : {}),
   });
   lastBoundClient = state.client;
 }
@@ -528,9 +529,20 @@ export async function executeWriteFlow(functionName, args = [], value, afterAcce
 
   try {
     await ensureWalletReady();
-    const injectedClient = state.client !== lastBoundClient ? state.client : null;
-    updateClient();
-    if (injectedClient) state.client = injectedClient;
+
+    if (!state.walletAddress || !state.provider) {
+      throw new Error("Connect a StudioNet wallet first.");
+    }
+
+    const writeClient = createClient({
+      chain: studionet,
+      account: state.walletAddress,
+      provider: state.provider,
+    });
+
+    if (typeof writeClient.connect === "function") {
+      await writeClient.connect("studionet");
+    }
 
     setStatus("Phase: signature — Please approve transaction in your wallet.");
 
@@ -539,20 +551,19 @@ export async function executeWriteFlow(functionName, args = [], value, afterAcce
       abi: ABI,
       functionName,
       args,
-      account: state.walletAddress,
     };
     if (typeof value !== "undefined") {
       payload.value = value;
     }
 
-    txHash = await state.client.writeContract(payload);
+    txHash = await writeClient.writeContract(payload);
+    state.client = writeClient;
 
-    // Phase 2: submitted
     setTxLink(txHash);
     setStatus(`Phase: submitted — Transaction submitted with hash ${shortenAddress(txHash)}`);
 
     setStatus("Phase: wait finalized — Waiting for transaction finalization...");
-    const receipt = await state.client.waitForTransactionReceipt({
+    const receipt = await writeClient.waitForTransactionReceipt({
       hash: txHash,
       status: "FINALIZED",
       retries: 40,
@@ -564,16 +575,15 @@ export async function executeWriteFlow(functionName, args = [], value, afterAcce
     }
 
     setStatus("Phase: consensus — Transaction consensus achieved.");
-
     setStatus("Phase: execution — Transaction executed on chain.");
-
     setStatus("Phase: read — Verifying accepted state readout...");
+
     if (afterAccepted) {
       await afterAccepted(receipt);
     }
+
     setStatus("Phase: accepted — State accepted on chain.");
     await refreshStats();
-
     setStatus("Transaction complete and state accepted on chain.");
     return txHash;
   } catch (error) {
