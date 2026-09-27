@@ -1,6 +1,3 @@
-import { createClient } from "https://esm.sh/genlayer-js@0.18.0?bundle";
-import { studionet } from "https://esm.sh/genlayer-js@0.18.0/chains?bundle";
-
 export const CONTRACT_ADDRESS = "0x0457a41D55729cf56a92E1048b1eB8F1D2471f4F";
 export const RPC_URL = "https://studio.genlayer.com/api";
 export const EXPLORER = "https://explorer-studio.genlayer.com";
@@ -137,12 +134,34 @@ export const ABI = [
   },
 ];
 
+function storageGet(key) {
+  try {
+    if (typeof localStorage === "undefined" || typeof localStorage.getItem !== "function") return "";
+    return localStorage.getItem(key) || "";
+  } catch {
+    return "";
+  }
+}
+function storageSet(key, value) {
+  try {
+    if (typeof localStorage === "undefined" || typeof localStorage.setItem !== "function") return;
+    localStorage.setItem(key, value);
+  } catch {}
+}
+
+function storageRemove(key) {
+  try {
+    if (typeof localStorage === "undefined" || typeof localStorage.removeItem !== "function") return;
+    localStorage.removeItem(key);
+  } catch {}
+}
+
 export const state = {
   provider: null,
-  walletAddress: typeof localStorage !== "undefined" ? localStorage.getItem(WALLET_KEY) || "" : "",
+  walletAddress: storageGet(WALLET_KEY),
   chainId: null,
-  view: typeof localStorage !== "undefined" ? localStorage.getItem(VIEW_KEY) || "landing" : "landing",
-  theme: typeof localStorage !== "undefined" ? localStorage.getItem(THEME_KEY) || "dark" : "dark",
+  view: storageGet(VIEW_KEY) || "landing",
+  theme: storageGet(THEME_KEY) || "dark",
   isSubmitting: false,
   inFlight: false,
   currentStatus: "",
@@ -150,9 +169,23 @@ export const state = {
   client: null,
 };
 
+let sdkPromise = null;
+
+async function loadSdk() {
+  if (!sdkPromise) {
+    sdkPromise = Promise.all([
+      import("https://esm.sh/genlayer-js@0.18.0?bundle"),
+      import("https://esm.sh/genlayer-js@0.18.0/chains?bundle"),
+    ]);
+  }
+  const [mod, chains] = await sdkPromise;
+  return { createClient: mod.createClient, studionet: chains.studionet };
+}
+
 let lastBoundClient = null;
 
-export function updateClient() {
+export async function updateClient() {
+  const { createClient, studionet } = await loadSdk();
   const account = state.walletAddress || undefined;
   const provider = state.provider || undefined;
   state.client = createClient({
@@ -161,10 +194,10 @@ export function updateClient() {
     ...(provider ? { provider } : {}),
   });
   lastBoundClient = state.client;
+  return state.client;
 }
 
 // Initial client creation
-updateClient();
 
 export const elements = {
   get landingView() { return typeof document !== "undefined" ? document.getElementById("landing-view") : null; },
@@ -200,7 +233,7 @@ export function showLanding() {
   elements.landingView.classList.add("view-active");
   elements.appView.classList.add("view-hidden");
   elements.appView.classList.remove("view-active");
-  if (typeof localStorage !== "undefined") localStorage.setItem(VIEW_KEY, "landing");
+  if (typeof localStorage !== "undefined") storageSet(VIEW_KEY, "landing");
 }
 
 export function showApp() {
@@ -209,7 +242,7 @@ export function showApp() {
   elements.appView.classList.add("view-active");
   elements.landingView.classList.add("view-hidden");
   elements.landingView.classList.remove("view-active");
-  if (typeof localStorage !== "undefined") localStorage.setItem(VIEW_KEY, "app");
+  if (typeof localStorage !== "undefined") storageSet(VIEW_KEY, "app");
 }
 
 export function applyTheme(theme) {
@@ -223,7 +256,7 @@ export function applyTheme(theme) {
       }
     });
   }
-  if (typeof localStorage !== "undefined") localStorage.setItem(THEME_KEY, nextTheme);
+  if (typeof localStorage !== "undefined") storageSet(THEME_KEY, nextTheme);
 }
 
 export function shortenAddress(address) {
@@ -474,6 +507,9 @@ export function parseAmountInWei(value) {
     throw new Error("Invalid amount format.");
   }
   const [wholeStr, fracStr = ""] = raw.split(".");
+  if (fracStr.length > 18) {
+    throw new Error("Amount exceeds maximum precision of 18 decimals.");
+  }
   const paddedFrac = fracStr.slice(0, 18).padEnd(18, "0");
   const wholeWei = BigInt(wholeStr) * 10n ** 18n;
   const fracWei = BigInt(paddedFrac);
@@ -499,7 +535,7 @@ export async function ensureWalletReady() {
 }
 
 export async function readContract(functionName, args = []) {
-  if (!state.client) updateClient();
+  if (!state.client) await updateClient();
   return state.client.readContract({
     address: CONTRACT_ADDRESS,
     abi: ABI,
@@ -534,11 +570,20 @@ export async function executeWriteFlow(functionName, args = [], value, afterAcce
       throw new Error("Connect a StudioNet wallet first.");
     }
 
-    const writeClient = createClient({
-      chain: studionet,
-      account: state.walletAddress,
-      provider: state.provider,
-    });
+    let writeClient;
+    if (state.client && typeof state.client.writeContract === "function") {
+      writeClient = state.client;
+    } else {
+      const { createClient, studionet } = await loadSdk();
+      writeClient = createClient({
+        chain: studionet,
+        account: state.walletAddress,
+        provider: state.provider,
+      });
+      if (typeof writeClient.connect === "function") {
+        await writeClient.connect("studionet");
+      }
+    }
 
     if (typeof writeClient.connect === "function") {
       await writeClient.connect("studionet");
@@ -655,14 +700,15 @@ export function attachProviderListeners(provider) {
   provider.on("accountsChanged", async (accounts) => {
     if (!accounts || accounts.length === 0) {
       disconnectWallet();
-    } else {
-      state.walletAddress = accounts[0].toLowerCase();
-      if (typeof localStorage !== "undefined") localStorage.setItem(WALLET_KEY, state.walletAddress);
-      updateClient();
-      setWalletUi();
-      setStatus(`Account changed: ${shortenAddress(state.walletAddress)}`);
-      await refreshStats();
+      return;
     }
+    state.walletAddress = accounts[0].toLowerCase();
+    storageSet(WALLET_KEY, state.walletAddress);
+    setWalletUi();
+    setStatus(`Account changed: ${shortenAddress(state.walletAddress)}`);
+    if (typeof window === "undefined") return;
+    await updateClient();
+    await refreshStats();
   });
 
   provider.on("chainChanged", (chainIdHex) => {
@@ -689,11 +735,11 @@ export async function connectWallet() {
     }
 
     state.walletAddress = accounts[0].toLowerCase();
-    if (typeof localStorage !== "undefined") localStorage.setItem(WALLET_KEY, state.walletAddress);
+    if (typeof localStorage !== "undefined") storageSet(WALLET_KEY, state.walletAddress);
 
     await ensureChain(state.provider);
     attachProviderListeners(state.provider);
-    updateClient();
+    await updateClient();
     setWalletUi();
     setStatus("Wallet connected. You can create, fund, review, and inspect grants.");
     await refreshStats();
@@ -703,17 +749,18 @@ export async function connectWallet() {
   }
 }
 
-export function disconnectWallet() {
+export async function disconnectWallet() {
   state.walletAddress = "";
-  if (typeof localStorage !== "undefined") localStorage.removeItem(WALLET_KEY);
-  updateClient();
+  storageRemove(WALLET_KEY);
   setWalletUi();
   setStatus("Wallet disconnected. Connect a StudioNet wallet to write.");
+  if (typeof window === "undefined") return;
+  await updateClient();
 }
 
 export async function restoreWalletOnLoad() {
   if (typeof localStorage === "undefined") return;
-  const storedAddress = localStorage.getItem(WALLET_KEY);
+  const storedAddress = storageSet(WALLET_KEY, state.walletAddress);
   if (!storedAddress) return;
 
   state.provider = getPreferredProvider();
@@ -726,7 +773,7 @@ export async function restoreWalletOnLoad() {
       localStorage.setItem(WALLET_KEY, state.walletAddress);
       await ensureChain(state.provider);
       attachProviderListeners(state.provider);
-      updateClient();
+      await updateClient();
       setWalletUi();
       setStatus("Wallet restored. You can continue from the desk.");
       await refreshStats();
@@ -1131,7 +1178,7 @@ export async function initialize() {
 }
 
 if (typeof window !== "undefined") {
-  window.addEventListener("eip6963:announceProvider", (event) => {
+  window.addEventListener("eip6963:announceProvider", async (event) => {
     const { info, provider } = event.detail || {};
     if (!provider?.request || !info?.rdns) return;
     if (discoveredWallets.some((w) => w.rdns === info.rdns)) return;
@@ -1143,7 +1190,7 @@ if (typeof window !== "undefined") {
     if (event?.detail?.provider?.request) {
       state.provider = event.detail.provider;
       attachProviderListeners(state.provider);
-      updateClient();
+      await updateClient();
     }
   });
 
@@ -1153,7 +1200,7 @@ if (typeof window !== "undefined") {
     state.provider = getPreferredProvider();
     if (state.provider) {
       attachProviderListeners(state.provider);
-      updateClient();
+      await updateClient();
     }
   }
 
@@ -1163,3 +1210,9 @@ if (typeof window !== "undefined") {
     initialize();
   }
 }
+
+// release hash:
+// 0xc5e23f4165343fd0ddf401e81c91141116736739ee615e0552350942f60686d3
+
+// claw back hash:
+// 0x7a2f2ee3065052a57121d4256a917a5b3e23c9d44b8a491053aac4940af090aa
