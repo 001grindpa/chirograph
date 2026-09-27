@@ -1210,9 +1210,3 @@ if (typeof window !== "undefined") {
     initialize();
   }
 }
-
-// release hash:
-// 0xc5e23f4165343fd0ddf401e81c91141116736739ee615e0552350942f60686d3
-
-// claw back hash:
-// 0x7a2f2ee3065052a57121d4256a917a5b3e23c9d44b8a491053aac4940af090aa

@@ -21,6 +21,9 @@ The following live StudioNet transactions show grant creation, funding, evidence
 | `fund_tranche` | `0xa8ff99fe217f9dffc447866ea6c1703299975407e633e6309a097238975e58b8` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xa8ff99fe217f9dffc447866ea6c1703299975407e633e6309a097238975e58b8) |
 | `update_evidence` | `0xa04262e94e1383f8c85a95c9d49f4240dfd652f5e07ff67bce0ae9ec429ee297` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xa04262e94e1383f8c85a95c9d49f4240dfd652f5e07ff67bce0ae9ec429ee297) |
 | `open_review` | `0x7e3a3beb4ab8263c4c1155813dbc822aadf817e953d9f369de06fa1f1a2d9c3a` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x7e3a3beb4ab8263c4c1155813dbc822aadf817e953d9f369de06fa1f1a2d9c3a) |
+| `release` | `0xc5e23f4165343fd0ddf401e81c91141116736739ee615e0552350942f60686d3` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xc5e23f4165343fd0ddf401e81c91141116736739ee615e0552350942f60686d3) |
+| `expire_review` | `0x229adb3c16e147c9632cf505802c95eae11ba1fcf4807890f414c1e4d2cb0059` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x229adb3c16e147c9632cf505802c95eae11ba1fcf4807890f414c1e4d2cb0059) |
+| `clawback` | `0x7a2f2ee3065052a57121d4256a917a5b3e23c9d44b8a491053aac4940af090aa` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x7a2f2ee3065052a57121d4256a917a5b3e23c9d44b8a491053aac4940af090aa) |
 
 ### Accepted State Readouts (`stateStatus: "accepted"`)
 
@@ -39,7 +42,7 @@ The following live StudioNet transactions show grant creation, funding, evidence
 }
 ```
 
-Tranche 1 is funded, and review was opened on this grant. `release`, `expire_review`, and `clawback` were not run on this same grant because clawback is blocked while review is live.
+release and expire_review were run on grant 4 tranche 1; clawback was run on a separate reserved grant(grant 5) because clawback is blocked during PENDING_REVIEW.
 
 ## How to run the app
 
