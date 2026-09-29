@@ -72,10 +72,21 @@ def _norm_addr(value: str) -> str:
     return match.group(0).lower()
 
 
+@gl.evm.contract_interface
+class _Wallet:
+    class View:
+        pass
+
+    class Write:
+        pass
+
+
 def _pay(to: Address, amount: u256) -> None:
     if amount == 0:
         return
-    gl.get_contract_at(to).emit_transfer(value=amount, on="finalized")
+    if to == ZERO:
+        raise gl.vm.UserError("cannot pay the zero address")
+    _Wallet(to).emit_transfer(value=amount)
 
 
 @allow_storage

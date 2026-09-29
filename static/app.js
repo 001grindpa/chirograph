@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0x0457a41D55729cf56a92E1048b1eB8F1D2471f4F";
+export const CONTRACT_ADDRESS = "0x0199AB1bdB266CAe443CE43Df0D21e796702D72E";
 export const RPC_URL = "https://studio.genlayer.com/api";
 export const EXPLORER = "https://explorer-studio.genlayer.com";
 export const CHAIN_ID = 61999;

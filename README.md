@@ -4,45 +4,24 @@ Chirograph is a dated milestone grant escrow desk for GenLayer StudioNet. A fund
 
 ## Contract
 
-- **StudioNet contract address**: `0x0457a41D55729cf56a92E1048b1eB8F1D2471f4F`
+- **StudioNet contract address**: `0x0199AB1bdB266CAe443CE43Df0D21e796702D72E`
 - **Chain ID**: `61999` (`0xf22f`)
 - **RPC URL**: `https://studio.genlayer.com/api`
-- **Explorer**: `https://explorer-studio.genlayer.com/address/0x0457a41D55729cf56a92E1048b1eB8F1D2471f4F`
+- **Explorer**: `https://explorer-studio.genlayer.com/address/0x0199AB1bdB266CAe443CE43Df0D21e796702D72E`
 
 ## Live StudioNet Lifecycle
 
-The following live StudioNet transactions show grant creation, funding, evidence update, and review opening.
-
 ### Transaction Hashes
 
-| Method | Transaction Hash | Explorer Link |
-|---|---|---|
-| `create_grant` | `0x21318970918c5f81102d46a1872c4894a4e81c91cada7e2e97f7c04c0b4feee1` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x21318970918c5f81102d46a1872c4894a4e81c91cada7e2e97f7c04c0b4feee1) |
-| `fund_tranche` | `0xa8ff99fe217f9dffc447866ea6c1703299975407e633e6309a097238975e58b8` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xa8ff99fe217f9dffc447866ea6c1703299975407e633e6309a097238975e58b8) |
-| `update_evidence` | `0xa04262e94e1383f8c85a95c9d49f4240dfd652f5e07ff67bce0ae9ec429ee297` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xa04262e94e1383f8c85a95c9d49f4240dfd652f5e07ff67bce0ae9ec429ee297) |
-| `open_review` | `0x7e3a3beb4ab8263c4c1155813dbc822aadf817e953d9f369de06fa1f1a2d9c3a` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x7e3a3beb4ab8263c4c1155813dbc822aadf817e953d9f369de06fa1f1a2d9c3a) |
-| `release` | `0xc5e23f4165343fd0ddf401e81c91141116736739ee615e0552350942f60686d3` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xc5e23f4165343fd0ddf401e81c91141116736739ee615e0552350942f60686d3) |
-| `expire_review` | `0x229adb3c16e147c9632cf505802c95eae11ba1fcf4807890f414c1e4d2cb0059` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x229adb3c16e147c9632cf505802c95eae11ba1fcf4807890f414c1e4d2cb0059) |
-| `clawback` | `0x7a2f2ee3065052a57121d4256a917a5b3e23c9d44b8a491053aac4940af090aa` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x7a2f2ee3065052a57121d4256a917a5b3e23c9d44b8a491053aac4940af090aa) |
-
-### Accepted State Readouts (`stateStatus: "accepted"`)
-
-#### `get_grant` (Grant ID: 4)
-```json
-{
-  "builder": "0xB69752fc9A3215D39967E8eA471D12FF6b1319C5",
-  "funder": "0x8282B51f90DE07F1279cA36f0f559C5D7733BEd3",
-  "next_tranche_id": "2",
-  "released_count": "0",
-  "spec_text": "Builder publishes dated milestone notes on two independent hosts. Both pages must name this grant and include the builder address.",
-  "spec_url_a": "https://github.com/expressjs/express/blob/master/Readme.md",
-  "spec_url_b": "https://gitlab.com/gitlab-org/gitlab/-/blob/master/README.md",
-  "status": "OPEN",
-  "title": "StudioNet indenture desk"
-}
-```
-
-release and expire_review were run on grant 4 tranche 1; clawback was run on a separate reserved grant(grant 5) because clawback is blocked during PENDING_REVIEW.
+| Grant | Method | Transaction Hash | Explorer Link |
+|---|---|---|---|
+| Payout-proof grant | `create_grant` | `0xe5a9a453be0db465aced5745658b6c745d6ab950c042da95c44f9a07eec00cc4` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xe5a9a453be0db465aced5745658b6c745d6ab950c042da95c44f9a07eec00cc4) |
+| Payout-proof grant | `fund_tranche` | `0x8889fd10a0e7683772123b0aa6e6d0d5f12b642e26c597de813c60f9f719810d` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x8889fd10a0e7683772123b0aa6e6d0d5f12b642e26c597de813c60f9f719810d) |
+| Payout-proof grant | `open_review` | `0x7cc56995b5dd131892312e9b223945f0cffde0855fc6ff3630cad964947aef5a` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x7cc56995b5dd131892312e9b223945f0cffde0855fc6ff3630cad964947aef5a) |
+| Payout-proof grant | `release` | `0x8e02ca1c441075d7be3e60ada9c750ec779b5afb1b862a2e5c9a568d2c20caa9` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x8e02ca1c441075d7be3e60ada9c750ec779b5afb1b862a2e5c9a568d2c20caa9) |
+| Clawback-proof grant | `create_grant` | `0xa6c1b9f7cbf24fb61c7ffd6148faea8956588058683487ab677e83d706473013` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xa6c1b9f7cbf24fb61c7ffd6148faea8956588058683487ab677e83d706473013) |
+| Clawback-proof grant | `fund_tranche` | `0x32d681c45ccbd3590f09afdd3177ffce938a6c2c743caa53930861e051cbf5b3` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0x32d681c45ccbd3590f09afdd3177ffce938a6c2c743caa53930861e051cbf5b3) |
+| Clawback-proof grant | `clawback` | `0xce228015243405da447425892405990eee78c0c6fd9eebaa1fb1b073238f1aec` | [View on Explorer](https://explorer-studio.genlayer.com/tx/0xce228015243405da447425892405990eee78c0c6fd9eebaa1fb1b073238f1aec) |
 
 ## How to run the app
 
